@@ -24,11 +24,7 @@ setup(name='libE_opt_postproc',
       license='',
       packages=find_packages('.'),
       install_requires=read_requirements(),
-      entry_points={
-          'console_scripts': [
-              'plot_history.py=libE_opt_postproc.plot_history:main',
-          ],
-      },
+      scripts=['libe_opt_postproc/plot_history.py'],
       platforms='any',
       classifiers=[
           "Development Status :: 3 - Alpha",

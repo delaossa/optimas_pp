@@ -120,7 +120,7 @@ class PostProcOptimization(object):
                 sys.path.insert(1, basedir)
                 from varying_parameters import varying_parameters
                 self.varpars = list(varying_parameters.keys())
-        print('varying parameters:  ', self.varpars)
+        # print('varying parameters:  ', self.varpars)
 
         if self.anapars is None:
             self.anapars = [x for x in spepars if (x not in self.varpars) and (x != 'f')]
@@ -150,7 +150,8 @@ class PostProcOptimization(object):
             
         # order list of simulations
         if sort:
-            self.df = self.df.sort_values(by=['f'], ascending=False).reset_index(drop=True)
+            self.df = self.df.sort_values(by=['f'],
+                                ascending=False).reset_index(drop=True)
 
         df = self.get_df()
             
@@ -196,7 +197,7 @@ class PostProcOptimization(object):
 
             if parnames[i] == 'f':
                 cummin = df.f.cummin().values
-                plt.plot(index, cummin, '-')
+                plt.plot(index, cummin, '-', c='black')
             
             plt.title(parnames[i].replace('_', ' '), fontdict={'fontsize': 8}, loc='right', pad=2)
         
@@ -225,14 +226,13 @@ class PostProcOptimization(object):
                     ax_scatter.set_ylabel('')
             else:
                 ax_histy.tick_params(direction='out', labelleft=False)
-                ax_scatter.set_xlabel("simulation number")
-                ax_histy.set_xlabel("events [%]")
+                ax_scatter.set_xlabel('simulation number')
+                ax_histy.set_xlabel('events [%]')
             
             histmax = 1.1 * max([h.max() for h in histy_list])
             for i, ax_h in enumerate(ax_histy_list):
                 ax_h.set_xlim(-1, histmax)
 
-        # plt.tight_layout()
         if filename is not None:
             plt.savefig(filename, dpi=300)
 

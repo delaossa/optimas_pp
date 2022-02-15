@@ -1,9 +1,8 @@
+#!/usr/bin/env python
 import argparse
-import os
 from libe_opt_postproc.post_processing import PostProcOptimization
 # --
 import matplotlib
-import matplotlib.pyplot as plt
 matplotlib.use('Agg')
 
 
@@ -40,15 +39,13 @@ def main():
         # print('Ensemble directory name: %s' % base_dir_name)
         # print()
 
-        select = {'f': [None, -10], 'q': [None, 100]}
-        df = ppo.get_df(select)
-        print('selected indexes = ', list(df.index))
-        
+        df = ppo.get_df()
         idxmin = df['f'].idxmin()
         ppo.print_history_entry(idxmin)
 
         if args.top > 1:
-            index_list = list(ppo.get_df().sort_values(by=['f'], ascending=True).index)
+            index_list = list(df.sort_values(by=['f'],
+                                ascending=True).index)
             for i in range(1, args.top):
                 idx = index_list[i]
                 ppo.print_history_entry(idx)
@@ -57,8 +54,9 @@ def main():
         if args.cut is not None:
             select = {'f': [None, args.cut]}
 
-        parnames = ['f', 'beam_i0', 'beam_i1', 'med']
-        ppo.plot_history(parnames=parnames, sort=args.sort, select=select, filename='kk.png')
+        parnames = None
+        ppo.plot_history(parnames=parnames, sort=args.sort, select=select,
+                         filename='kk.png')
                 
                 
 if __name__ == '__main__':
