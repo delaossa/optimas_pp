@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-import argparse
-import os
+import argparse, os
 from libe_opt_postproc.post_processing import PostProcOptimization
 # --
 import matplotlib
