@@ -8,6 +8,11 @@ import os, sys
 import warnings
 from natsort import natsorted
 import glob
+from copy import deepcopy
+# Ax utilities for model building
+from ax.service.ax_client import AxClient
+from ax.modelbridge.factory import get_GPEI
+from ax.core.observation import ObservationFeatures
 
 
 class PostProcOptimization(object):
@@ -61,6 +66,9 @@ class PostProcOptimization(object):
 
         if None in [self.varpars, self.anapars]:
             self._auto_detect_parameters()
+
+        # Ax model building
+        self.ax_client = None
 
     def get_df(self, select=None):
         """
@@ -371,3 +379,30 @@ class PostProcOptimization(object):
 
         plt.ylabel('Worker')
         plt.xlabel('Time ')
+
+    def build_model_ax(self, parnames=None, objname='f', minimize=True):
+
+        if parnames is None:
+            parnames = self.varpars
+
+        parameters = [{'name': p_name,
+                       'type': 'range',
+                       'bounds': [self.df[p_name].min(), self.df[p_name].max()],
+                       'value_type': 'float'
+                       } for p_name in parnames]
+
+        # Create Ax client
+        self.ax_client = AxClient()
+        self.ax_client.create_experiment(
+            name='pepito',
+            parameters=parameters,
+            objective_name=objname,
+            minimize=minimize,
+        )
+
+        # adds data
+        metric_name = list(self.ax_client.experiment.metrics.keys())[0]
+        for index, row in self.df.iterrows():
+            params = {p_name: row[p_name] for p_name in parnames}
+            _, trial_id = self.ax_client.attach_trial(params)
+            self.ax_client.complete_trial(trial_id, {metric_name: (row[metric_name], np.nan)})
