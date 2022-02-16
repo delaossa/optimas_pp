@@ -64,7 +64,9 @@ class PostProcOptimization(object):
 
         # Make the time relative to the start of the simulation
         self.df['given_time'] -= self.df['gen_time'].min()
-        self.df['returned_time'] -= self.df['gen_time'].min()
+        # patch for older versions of the libE_opt history file
+        if 'returned_time' in list(self.df.columns.values):
+            self.df['returned_time'] -= self.df['gen_time'].min()
         self.df['gen_time'] -= self.df['gen_time'].min()
 
         self.varpars = varpars
