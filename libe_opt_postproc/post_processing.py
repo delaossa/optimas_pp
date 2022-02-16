@@ -232,7 +232,8 @@ class PostProcOptimization(object):
         # print('specific parameters available: ', spepars)
         # find out the varying parameters
         if self.varpars is None:
-            varparfiles = glob.glob('**/varying_parameters.py', recursive=True)
+            base_dir = os.path.dirname(self.hist_file)
+            varparfiles = glob.glob('%s/**/varying_parameters.py' % base_dir, recursive=True)
             if len(varparfiles) == 0:
                 self.varpars = []
                 txt = ('Varying_parameters.py not found.')
