@@ -522,6 +522,7 @@ class PostProcOptimization(object):
         f_plots = [f_plt, sd_plt]
         labels = ['value', 'std. deviation']
         fig, axs = plt.subplots(len(f_plots), figsize=(5, 7), dpi=150)
+        fig.suptitle('$\mathrm{Model~for~metric~%s}$' % metric_name)
         for i, f in enumerate(f_plots):
             cmap = 'Spectral'
             if (i == 0) and (not minimize):
