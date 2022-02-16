@@ -104,8 +104,8 @@ class PostProcOptimization(object):
         # list of libE reserved names always listed in H
         libE_field_names = [f[0] for f in fkeys.libE_fields]
         libE_field_names.extend(['resource_sets', 'f'])
-        # print('libE parameters available: ', libE_field_names)
-        # list of specific parameter names
+        print('libE parameters:    ', libE_field_names)
+        # list of specific parameter names (user defined)
         spepars = [x for x in allpars if x not in libE_field_names]
         # print('specific parameters available: ', spepars)
         # find out the varying parameters
@@ -120,11 +120,26 @@ class PostProcOptimization(object):
                 sys.path.insert(1, basedir)
                 from varying_parameters import varying_parameters
                 self.varpars = list(varying_parameters.keys())
-        # print('varying parameters:  ', self.varpars)
+        print('varying parameters: ', self.varpars)
 
         if self.anapars is None:
             self.anapars = [x for x in spepars if (x not in self.varpars) and (x != 'f')]
-        print('analyzed quantities: ', self.anapars)
+        print('analyzed quantities:', self.anapars)
+
+    def sortby(self, parname='f', ascending=True):
+        """
+        Sort dataframe by the specified parameter.
+
+        Parameters
+        ----------
+        parname: string, optional
+            Name of the parameter to sort by
+
+        ascending: bool, optional
+            when `True` it sorts in ascending order,
+            otherwise, in descending order
+        """
+        self.df = self.df.sort_values(by=[parname], ascending=ascending).reset_index(drop=True)
 
     def print_history_entry(self, idx):
         """
@@ -145,13 +160,27 @@ class PostProcOptimization(object):
                 print('%20s = %10.5f' % (name, h[name]))
 
     def plot_history(self, parnames=None, sort=False, select=None, filename=None):
+        """
+        Print selected parameters versus simulation index.
+
+        Parameters
+        ----------
+        sort: bool, optional
+            when `True`, it orders simulations acoording by the values of `f` (descendingly)
+
+        select: dict, optional
+            it lists a set of rules to filter the dataframe, e.g.
+            'f' : [None, -10.] (get data with f < -10)
+
+        filename: string, optional
+            When defined, it saves the figure to the specified file.
+        """
 
         index = list(self.df.index)
             
-        # order list of simulations
+        # order list of simulations and re-index
         if sort:
-            self.df = self.df.sort_values(by=['f'],
-                                ascending=False).reset_index(drop=True)
+            self.sortby('f', ascending=False)
 
         df = self.get_df()
             
@@ -195,7 +224,7 @@ class PostProcOptimization(object):
                 h_cut = df_select[parnames[i]]
                 plt.plot(index_cut, h_cut, 'o')
 
-            if parnames[i] == 'f':
+            if (parnames[i] == 'f') and (not sort):
                 cummin = df.f.cummin().values
                 plt.plot(index, cummin, '-', c='black')
             

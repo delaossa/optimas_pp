@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import os
 from libe_opt_postproc.post_processing import PostProcOptimization
 # --
 import matplotlib
@@ -10,7 +11,13 @@ def parse_args():
     # Command argument line parser
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('paths', nargs='+', default=[],
-                        help='list of paths to analyze')
+                        help=('list of paths to analyze '
+                              '(either a libE_opt histoty file '
+                              'or a directory containing it)'))
+    parser.add_argument('-pars', nargs='+', default=[],
+                        help='list of parameters to show')
+    parser.add_argument('-opath', type=str, dest='opath', default=None,
+                        help='output folder')
     parser.add_argument('--sort', action='store_true', default=False,
                         help='sort simulations by objecive function')
     parser.add_argument('-cut', type=float, dest='cut', default=None,
@@ -31,33 +38,41 @@ def main():
 
         hist_file = ppo.hist_file
         print('History file: %s' % hist_file)
-        # hist_file_name = os.path.basename(os.path.abspath(hist_file))
-        # print('History file name: %s' % hist_file_name)
-        # base_dir = os.path.dirname(hist_file)
-        # print('Ensemble directory: %s' % base_dir)
-        # base_dir_name = os.path.basename(os.path.abspath(base_dir))
-        # print('Ensemble directory name: %s' % base_dir_name)
-        # print()
+
+        # Set output path
+        if args.opath is None:
+            base_dir = os.path.dirname(hist_file)
+            opath = base_dir + '/plots'
+        os.makedirs(opath, exist_ok=True)
 
         df = ppo.get_df()
-        idxmin = df['f'].idxmin()
-        ppo.print_history_entry(idxmin)
-
-        if args.top > 1:
-            index_list = list(df.sort_values(by=['f'],
+        index_list = list(df.sort_values(by=['f'],
                                 ascending=True).index)
-            for i in range(1, args.top):
-                idx = index_list[i]
-                ppo.print_history_entry(idx)
+        print('Show top %i simulations' % args.top)
+        for i in range(args.top):
+            idx = index_list[i]
+            ppo.print_history_entry(idx)
 
         select = None
         if args.cut is not None:
             select = {'f': [None, args.cut]}
 
-        parnames = None
-        ppo.plot_history(parnames=parnames, sort=args.sort, select=select,
-                         filename='kk.png')
-                
-                
+        if args.pars:
+            parnames = args.pars
+            ppo.plot_history(parnames=parnames, sort=args.sort, select=select,
+                             filename=opath + '/history_pars.png')
+        else:
+            if ppo.varpars:
+                parnames = ['f']
+                parnames.extend(ppo.varpars)
+                ppo.plot_history(parnames=parnames, sort=args.sort, select=select,
+                                 filename=opath + '/history_varpars.png')
+            if ppo.anapars:
+                parnames = ['f']
+                parnames.extend(ppo.anapars)
+                ppo.plot_history(parnames=parnames, sort=args.sort, select=select,
+                                 filename=opath + '/history_anapars.png')
+
+
 if __name__ == '__main__':
     main()
