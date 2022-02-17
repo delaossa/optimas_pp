@@ -72,7 +72,8 @@ class PostProcOptimization(object):
         self.varpars = varpars
         self.anapars = anapars
 
-        if None in [self.varpars, self.anapars]:
+        # if None in [self.varpars, self.anapars]:
+        if self.varpars is None:
             self._auto_detect_parameters()
 
         # Ax model building
@@ -235,7 +236,13 @@ class PostProcOptimization(object):
         # find out the varying parameters
         if self.varpars is None:
             base_dir = os.path.dirname(self.hist_file)
-            varparfiles = glob.glob('%s/**/varying_parameters.py' % base_dir, recursive=True)
+            search_dirs = [base_dir, base_dir + '/sim_specific']
+            varparfiles = []
+            for dire in search_dirs:
+                filepath = dire + '/varying_parameters.py'
+                if os.path.isfile(filepath):
+                    varparfiles.append(filepath)
+                
             if len(varparfiles) == 0:
                 self.varpars = []
                 txt = ('Varying_parameters.py not found.')
