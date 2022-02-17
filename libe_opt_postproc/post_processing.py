@@ -11,6 +11,9 @@ import glob
 from copy import deepcopy
 # Ax utilities for model building
 from ax.service.ax_client import AxClient
+from ax.modelbridge.generation_strategy import (
+    GenerationStep, GenerationStrategy)
+from ax.modelbridge.registry import Models
 from ax.modelbridge.factory import get_GPEI
 from ax.core.observation import ObservationFeatures
 
@@ -107,7 +110,7 @@ class PostProcOptimization(object):
         
         return self.df
 
-    def plot_optimization(self, fidelity_parameter=None, **kwargs):
+    def plot_optimization(self, fidelity_parameter=None, **kw):
         """
         Plot the values that where reached during the optimization
 
@@ -118,13 +121,15 @@ class PostProcOptimization(object):
             If given, the different fidelity will
             be plotted in different colors
 
-        kwargs: optional arguments to pass to `plt.scatter`
+        kw: optional arguments to pass to `plt.scatter`
         """
         if fidelity_parameter is not None:
             fidelity = self.df[fidelity_parameter]
         else:
             fidelity = None
-        plt.scatter( self.df.returned_time, self.df.f, c=fidelity)
+        plt.scatter( self.df.returned_time, self.df.f, c=fidelity, **kw)
+        plt.ylabel('f')
+        plt.xlabel('Time ')
 
     def get_trace(self, fidelity_parameter=None,
                   min_fidelity=None, t_array=None,
@@ -424,7 +429,8 @@ class PostProcOptimization(object):
                        } for p_name in parnames]
 
         # create Ax client
-        self.ax_client = AxClient()
+        gs = GenerationStrategy([GenerationStep(model=Models.GPEI, num_trials=-1)])
+        self.ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
         self.ax_client.create_experiment(
             name='libe_opt_data',
             parameters=parameters,
@@ -528,8 +534,8 @@ class PostProcOptimization(object):
 
         f_plots = [f_plt, sd_plt]
         labels = ['value', 'std. deviation']
-        fig, axs = plt.subplots(len(f_plots), figsize=(5, 7), dpi=150)
-        fig.suptitle('$\mathrm{Model~for~metric~%s}$' % metric_name)
+        fig, axs = plt.subplots(len(f_plots), figsize=(6.4, 9.6), dpi=100)
+        fig.suptitle('Model for metric %s' % metric_name)
         for i, f in enumerate(f_plots):
             cmap = 'Spectral'
             if (i == 0) and (not minimize):
