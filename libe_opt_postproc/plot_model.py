@@ -44,7 +44,7 @@ def main():
 
         # Set output path
         if args.opath is None:
-            base_dir = os.path.dirname(hist_file)
+            base_dir = os.path.dirname(os.path.abspath(hist_file))
             opath = base_dir + '/plots'
         os.makedirs(opath, exist_ok=True)
 

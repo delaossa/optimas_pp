@@ -235,7 +235,7 @@ class PostProcOptimization(object):
         # print('specific parameters available: ', spepars)
         # find out the varying parameters
         if self.varpars is None:
-            base_dir = os.path.dirname(self.hist_file)
+            base_dir = os.path.dirname(os.path.abspath(self.hist_file))
             search_dirs = [base_dir, base_dir + '/sim_specific']
             varparfiles = []
             for dire in search_dirs:
@@ -245,7 +245,7 @@ class PostProcOptimization(object):
                 
             if len(varparfiles) == 0:
                 self.varpars = []
-                txt = ('Varying_parameters.py not found.')
+                txt = ('varying_parameters.py not found.')
                 warnings.warn(txt)
             else:
                 basedir = os.path.dirname(varparfiles[0])
