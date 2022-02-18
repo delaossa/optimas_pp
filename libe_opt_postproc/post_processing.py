@@ -95,20 +95,27 @@ class PostProcOptimization(object):
         """
 
         if select is not None:
-            condition = ''
-            for key in select:
-                if select[key][0] is not None:
-                    if condition != '':
-                        condition += ' and '
-                    condition += '%s > %f' % (key, select[key][0])
-                if select[key][1] is not None:
-                    if condition != '':
-                        condition += ' and '
-                    condition += '%s < %f' % (key, select[key][1])
-            print('Selecting according to the condition: ', condition)
-            return self.df.query(condition)
-        
-        return self.df
+            return self.get_df_with_select(select)
+        else:
+            return self.df
+
+    def get_df_with_select(self, select, df=None):
+
+        if df is None:
+            df = self.df
+
+        condition = ''
+        for key in select:
+            if select[key][0] is not None:
+                if condition != '':
+                    condition += ' and '
+                condition += '%s > %f' % (key, select[key][0])
+            if select[key][1] is not None:
+                if condition != '':
+                    condition += ' and '
+                condition += '%s < %f' % (key, select[key][1])
+        print('Selecting according to the condition: ', condition)
+        return df.query(condition)
 
     def plot_optimization(self, fidelity_parameter=None, **kw):
         """
@@ -313,16 +320,15 @@ class PostProcOptimization(object):
             When defined, it saves the figure to the specified file.
         """
 
-        index = list(self.df.index)
+        df = self.df.copy()
+        index = list(df.index)
             
         # order list of simulations and re-index
         if sort:
-            self.sortby('f', ascending=False)
-
-        df = self.get_df()
+            df = df.sort_values(by=['f'], ascending=False).reset_index(drop=True)
             
         if select is not None:
-            df_select = self.get_df(select)
+            df_select = self.get_df_with_select(select, df)
         else:
             df_select = None
 
