@@ -56,20 +56,25 @@ def main():
         if args.cut is not None:
             select = {'f': [None, args.cut]}
 
+        if args.sort is not None:
+            sort = {'f': False}
+        else:
+            sort = None
+            
         if args.pars:
             parnames = args.pars
-            ppo.plot_history(parnames=parnames, sort=args.sort, select=select,
+            ppo.plot_history(parnames=parnames, sort=sort, select=select,
                              filename=opath + '/history_pars.png')
         else:
             if ppo.varpars:
                 parnames = ['f']
                 parnames.extend(ppo.varpars)
-                ppo.plot_history(parnames=parnames, sort=args.sort, select=select,
+                ppo.plot_history(parnames=parnames, sort=sort, select=select,
                                  filename=opath + '/history_varpars.png')
             if ppo.anapars:
                 parnames = ['f']
                 parnames.extend(ppo.anapars)
-                ppo.plot_history(parnames=parnames, sort=args.sort, select=select,
+                ppo.plot_history(parnames=parnames, sort=sort, select=select,
                                  filename=opath + '/history_anapars.png')
 
 

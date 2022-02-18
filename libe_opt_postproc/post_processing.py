@@ -270,21 +270,6 @@ class PostProcOptimization(object):
             self.anapars = [x for x in spepars if (x not in self.varpars) and (x != 'f')]
         print('Analyzed quantities:', self.anapars)
 
-    def sortby(self, parname='f', ascending=True):
-        """
-        Sort dataframe by the specified parameter.
-
-        Parameters
-        ----------
-        parname: string, optional
-            Name of the parameter to sort by
-
-        ascending: bool, optional
-            when `True` it sorts in ascending order,
-            otherwise, in descending order
-        """
-        self.df = self.df.sort_values(by=[parname], ascending=ascending).reset_index(drop=True)
-
     def print_history_entry(self, idx):
         """
         Print parameters for row entry with index `idx`
@@ -303,18 +288,23 @@ class PostProcOptimization(object):
             for name in self.anapars:
                 print('%20s = %10.5f' % (name, h[name]))
 
-    def plot_history(self, parnames=None, sort=False, select=None, filename=None):
+    def plot_history(self, parnames=None, select=None, sort=None, filename=None):
         """
         Print selected parameters versus simulation index.
 
         Parameters
         ----------
-        sort: bool, optional
-            when `True`, it orders simulations acoording by the values of `f` (descendingly)
+        parnames: list of strings, optional
+            List with the names of the parameters to show.
 
         select: dict, optional
             it lists a set of rules to filter the dataframe, e.g.
             'f' : [None, -10.] (get data with f < -10)
+
+        sort: dict, optional
+            A dict containing as keys the names of the parameres to sort by and,
+            as values, a Bool indicating if ordering ascendingly (True) or descendingly otherwise.
+            e.g. {'f': False} sort simulations according to `f` descendingly.
 
         filename: string, optional
             When defined, it saves the figure to the specified file.
@@ -324,8 +314,8 @@ class PostProcOptimization(object):
         index = list(df.index)
             
         # order list of simulations and re-index
-        if sort:
-            df = df.sort_values(by=['f'], ascending=False).reset_index(drop=True)
+        if sort is not None:
+            df = df.sort_values(by=list(sort.keys()), ascending=tuple(sort.values())).reset_index(drop=True)
             
         if select is not None:
             df_select = self.get_df_with_select(select, df)
