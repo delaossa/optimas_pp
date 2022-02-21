@@ -56,7 +56,7 @@ def main():
         if args.cut is not None:
             select = {'f': [None, args.cut]}
 
-        if args.sort is not None:
+        if args.sort:
             sort = {'f': False}
         else:
             sort = None
