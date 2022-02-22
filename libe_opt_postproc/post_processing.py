@@ -245,10 +245,13 @@ class PostProcOptimization(object):
         # list of specific parameter names (user defined)
         spepars = [x for x in allpars if x not in libE_field_names]
         # print('specific parameters available: ', spepars)
+
+        # setup searching directories
+        base_dir = os.path.dirname(os.path.abspath(self.hist_file))
+        search_dirs = [base_dir, base_dir + '/sim_specific']
+
         # find out the varying parameters
         if self.varpars is None:
-            base_dir = os.path.dirname(os.path.abspath(self.hist_file))
-            search_dirs = [base_dir, base_dir + '/sim_specific']
             varparfiles = []
             for dire in search_dirs:
                 filepath = dire + '/varying_parameters.py'
@@ -266,8 +269,24 @@ class PostProcOptimization(object):
                 self.varpars = list(varying_parameters.keys())
         print('Varying parameters: ', self.varpars)
 
+        # find out the analized parameters
         if self.anapars is None:
-            self.anapars = [x for x in spepars if (x not in self.varpars) and (x != 'f')]
+            # self.anapars = [x for x in spepars if (x not in self.varpars) and (x != 'f')]
+            anaparfiles = []
+            for dire in search_dirs:
+                filepath = dire + '/analysis_script.py'
+                if os.path.isfile(filepath):
+                    anaparfiles.append(filepath)
+
+            if len(anaparfiles) == 0:
+                self.anapars = []
+                txt = ('analysis_script.py not found.')
+                warnings.warn(txt)
+            else:
+                basedir = os.path.dirname(anaparfiles[0])
+                sys.path.insert(1, basedir)
+                from analysis_script import analyzed_quantities
+                self.anapars = [x[0] for x in analyzed_quantities]
         print('Analyzed quantities:', self.anapars)
 
     def print_history_entry(self, idx):
@@ -287,6 +306,17 @@ class PostProcOptimization(object):
             print('analyzed parameters:')
             for name in self.anapars:
                 print('%20s = %10.5f' % (name, h[name]))
+
+    def get_sim_dir_name(self, sim_id, edir='ensemble'):
+        # get simulation directory
+        ensemble_path = os.path.dirname(os.path.abspath(self.hist_file)) + '/' + edir
+        simdirs = os.listdir(ensemble_path)
+        sim_name_id = 'sim%i_' % (sim_id)
+        for simdir in simdirs:
+            if sim_name_id in simdir:
+                directory = '%s/%s' % (ensemble_path, simdir)
+                return directory
+        return None
 
     def plot_history(self, parnames=None, select=None, sort=None, filename=None):
         """
