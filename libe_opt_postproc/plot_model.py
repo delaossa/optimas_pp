@@ -20,6 +20,8 @@ def parse_args():
                         help='list with the names of the parameters of the model')
     parser.add_argument('--max', action='store_true', default=False,
                         help='toogles maximization')
+    parser.add_argument('--stddev', action='store_true', default=False,
+                        help='shows in addition the std_dev of the fitted model')
     parser.add_argument('-opath', type=str, dest='opath', default=None,
                         help='output folder')
 
@@ -56,7 +58,7 @@ def main():
         else:
             fname += '.png'
         
-        ppo.plot_model(xname=args.xname, yname=args.yname, filename=opath + '/%s' % fname)
+        ppo.plot_model(xname=args.xname, yname=args.yname, filename=opath + '/%s' % fname, stddev=args.stddev)
 
 
 if __name__ == '__main__':

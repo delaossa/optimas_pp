@@ -43,15 +43,19 @@ def main():
 
         if args.keep is not None:
             itop = args.keep
-            sid_array = df.iloc[index_list]['sim_id'].tolist()
-            print('keep top %i: ' % itop, sid_array[:itop])
-            print('delete the rest: ', sid_array[itop:])
-            for sid in sid_array[itop:]:
+            sid_list = df.iloc[index_list]['sim_id'].tolist()
+            sid_tokeep = sid_list[:itop]
+            sid_todelete = sid_list[itop:]
+            print('keep top %i: ' % itop, sid_tokeep)
+            print('delete the rest: ', sid_todelete)
+            ppo.delete_simulation_data(sid_todelete, edir='ensemble', ddir='diags')
+            """
+            for sid in sid_todelete:
                 simdir = ppo.get_sim_dir_name(sid, edir='ensemble')
                 if simdir is not None:
                     print('deleting %s/diags .. ' % (simdir))
-                    os.system('rm -rf %s/diags' % (simdir))
-
+                    # os.system('rm -rf %s/diags' % (simdir))
+            """
 
 if __name__ == '__main__':
     main()

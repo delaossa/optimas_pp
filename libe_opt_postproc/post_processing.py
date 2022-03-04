@@ -36,6 +36,16 @@ class PostProcOptimization(object):
         varpars: list of string
             List with the names of the analyzed quantities (autodetected when omited)
         """
+        # path to history file
+        self.hist_file = None
+        # Data stored in history file
+        self.df = None
+        # list of variables
+        self.varpars = varpars
+        self.anapars = anapars
+        # Ax model building
+        self.ax_client = None
+        self.model = None
 
         # Find the `npy` file that contains the results
         if os.path.isdir(path):
@@ -72,16 +82,9 @@ class PostProcOptimization(object):
             self.df['returned_time'] -= self.df['gen_time'].min()
         self.df['gen_time'] -= self.df['gen_time'].min()
 
-        self.varpars = varpars
-        self.anapars = anapars
-
         # if None in [self.varpars, self.anapars]:
         if self.varpars is None:
             self._auto_detect_parameters()
-
-        # Ax model building
-        self.ax_client = None
-        self.model = None
 
     def get_df(self, select=None):
         """
@@ -244,50 +247,34 @@ class PostProcOptimization(object):
         print('libE parameters:    ', libE_field_names)
         # list of specific parameter names (user defined)
         spepars = [x for x in allpars if x not in libE_field_names]
-        # print('specific parameters available: ', spepars)
+        print('specific parameters available: ', spepars)
 
         # setup searching directories
         base_dir = os.path.dirname(os.path.abspath(self.hist_file))
         search_dirs = [base_dir, base_dir + '/sim_specific']
-
-        # find out the varying parameters
-        if self.varpars is None:
-            varparfiles = []
-            for dire in search_dirs:
-                filepath = dire + '/varying_parameters.py'
-                if os.path.isfile(filepath):
-                    varparfiles.append(filepath)
-                
-            if len(varparfiles) == 0:
-                self.varpars = []
-                txt = ('varying_parameters.py not found.')
-                warnings.warn(txt)
-            else:
-                basedir = os.path.dirname(varparfiles[0])
+        for dire in search_dirs:
+            varparfile = dire + '/varying_parameters.py'
+            anaparfile = dire + '/analysis_script.py'
+            if os.path.isfile(varparfile):
+                basedir = os.path.dirname(varparfile)
                 sys.path.insert(1, basedir)
                 from varying_parameters import varying_parameters
                 self.varpars = list(varying_parameters.keys())
-        print('Varying parameters: ', self.varpars)
+                if os.path.isfile(anaparfile):
+                    from analysis_script import analyzed_quantities
+                    self.anapars = [x[0] for x in analyzed_quantities]
 
-        # find out the analized parameters
-        if self.anapars is None:
-            # self.anapars = [x for x in spepars if (x not in self.varpars) and (x != 'f')]
-            anaparfiles = []
-            for dire in search_dirs:
-                filepath = dire + '/analysis_script.py'
-                if os.path.isfile(filepath):
-                    anaparfiles.append(filepath)
+        if self.varpars is not None:
+            print('Varying parameters: ', self.varpars)
+        else:
+            txt = ('varying_parameters.py not found.')
+            warnings.warn(txt)
 
-            if len(anaparfiles) == 0:
-                self.anapars = []
-                txt = ('analysis_script.py not found.')
-                warnings.warn(txt)
-            else:
-                basedir = os.path.dirname(anaparfiles[0])
-                sys.path.insert(1, basedir)
-                from analysis_script import analyzed_quantities
-                self.anapars = [x[0] for x in analyzed_quantities]
-        print('Analyzed quantities:', self.anapars)
+        if self.anapars is not None:
+            print('Analyzed quantities:', self.anapars)
+        else:
+            txt = ('analysis_script.py not found.')
+            warnings.warn(txt)
 
     def print_history_entry(self, idx):
         """
@@ -317,6 +304,17 @@ class PostProcOptimization(object):
                 directory = '%s/%s' % (ensemble_path, simdir)
                 return directory
         return None
+
+    def delete_simulation_data(self, sid_list, edir='ensemble', ddir='diags'):
+        """
+        Delete the data from simulations with sim_id in sid_list
+        """
+
+        for sid in sid_list:
+            simdir = self.get_sim_dir_name(sid, edir=edir)
+            if simdir is not None:
+                print('deleting %s/%s .. ' % (simdir, ddir))
+                os.system('rm -rf %s/%s' % (simdir, ddir))
 
     def plot_history(self, parnames=None, select=None, sort=None, filename=None):
         """
@@ -475,7 +473,7 @@ class PostProcOptimization(object):
         experiment = self.ax_client.experiment
         self.model = get_GPEI(experiment, experiment.fetch_data())
 
-    def plot_model(self, xname=None, yname=None, filename=None, npoints=200):
+    def plot_model(self, xname=None, yname=None, filename=None, npoints=200, stddev=False):
         """
         Plot model in the two selected variables, while others are fixed to the optimum.
 
@@ -558,23 +556,34 @@ class PostProcOptimization(object):
         # get metric at optimal point
         # fopt = float(df[df.arm_name == best_arm.name]['mean'])
 
-        f_plots = [f_plt, sd_plt]
-        labels = ['value', 'std. deviation']
-        fig, axs = plt.subplots(len(f_plots), figsize=(6.4, 9.6), dpi=100)
+        # f_plots = [f_plt, sd_plt]
+        # labels = ['value', 'std. deviation']
+        f_plots = [f_plt]
+        labels = [metric_name]
+        if stddev:
+            f_plots.append(sd_plt)
+            labels.append('std. deviation')
+
+        nplots = len(f_plots)
+        fig, axs = plt.subplots(nplots, figsize=(6.4, nplots * 4.8), dpi=100)
         fig.suptitle('Model for metric %s' % metric_name)
         for i, f in enumerate(f_plots):
+            if nplots == 1:
+                ax = axs
+            else:
+                ax = axs[i]
             cmap = 'Spectral'
             if (i == 0) and (not minimize):
                 cmap = 'Spectral_r'
-            im = axs[i].pcolormesh(xaxis, yaxis, f.reshape(X.shape), cmap=cmap, shading='auto')
-            cbar = fig.colorbar(im, ax=axs[i])
+            im = ax.pcolormesh(xaxis, yaxis, f.reshape(X.shape), cmap=cmap, shading='auto')
+            cbar = fig.colorbar(im, ax=ax)
             cbar.set_label(labels[i])
-            axs[i].set(xlabel=xname, ylabel=yname)
+            ax.set(xlabel=xname, ylabel=yname)
             # adding contour lines with labels
-            axs[i].contour(X, Y, f.reshape(X.shape), levels=20,
-                           linewidths=0.5, colors='black', linestyles='solid')
+            ax.contour(X, Y, f.reshape(X.shape), levels=20,
+                       linewidths=0.5, colors='black', linestyles='solid')
             # plt.clabel(cset, inline=True, fmt='%1.1f', fontsize=6)
-            axs[i].scatter(xtrials, ytrials, s=2, c='black', marker='o')
+            ax.scatter(xtrials, ytrials, s=2, c='black', marker='o')
         plt.tight_layout()
 
         if filename is not None:
