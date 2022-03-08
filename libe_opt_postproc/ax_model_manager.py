@@ -28,12 +28,16 @@ class AxModelManager(object):
         if isinstance(df, pd.DataFrame):
             self.df = df
         else:
-            raise RuntimeError('A pandas DataFrame must be given')
+            raise RuntimeError('A pandas DataFrame must be given.')
+
+        self.parnames = []
+        self.ax_client = None
+        self.model = None
 
     def build_model(self, parnames=[], objname='f', minimize=True):
         """
-        Initialize a the AxClient using the history data
-        and fits a Gaussian Process model to it.
+        Initialize the AxClient using the given data, the model parameters and the metric,
+        and fits a Gaussian Process model.
 
         Parameter:
         ----------
@@ -44,11 +48,17 @@ class AxModelManager(object):
             Name of the objective parameter
 
         minimize: bool
-            Whether to minimize or maximize the objective
+            Whether to minimize or maximize the objective.
+            Only relevant to establish the best point and the orientation of the colormap.
         """
-        if not parnames:
-            parnames = self.varpars
 
+        if (not parnames) and self.parnames:
+            parnames = self.parnames
+        elif parnames:
+            self.parnames = parnames
+        else:
+            raise RuntimeError('Parameter names list is not defined.')
+            
         parameters = [{'name': p_name,
                        'type': 'range',
                        'bounds': [self.df[p_name].min(), self.df[p_name].max()],

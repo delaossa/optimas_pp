@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument('-pars', nargs='+', default=[],
                         help='list with the names of the parameters of the model')
     parser.add_argument('--max', action='store_true', default=False,
-                        help='toogles maximization')
+                        help='toggles maximization')
     parser.add_argument('--stddev', action='store_true', default=False,
                         help='shows in addition the std_dev of the fitted model')
     parser.add_argument('-opath', type=str, dest='opath', default=None,
@@ -42,7 +42,8 @@ def main():
         parnames = args.pars
         objname = args.obj
         minimize = not args.max
-        ppo.build_model_ax(parnames=parnames, objname=objname, minimize=minimize)
+        # build model and return the AxModelManager object
+        amm = ppo.build_model(parnames=parnames, objname=objname, minimize=minimize)
 
         # Set output path
         if args.opath is None:
@@ -58,7 +59,7 @@ def main():
         else:
             fname += '.png'
         
-        ppo.plot_model(xname=args.xname, yname=args.yname, filename=opath + '/%s' % fname, stddev=args.stddev)
+        amm.plot_model(xname=args.xname, yname=args.yname, filename=opath + '/%s' % fname, stddev=args.stddev)
 
 
 if __name__ == '__main__':
