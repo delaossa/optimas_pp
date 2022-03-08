@@ -33,7 +33,7 @@ class PostProcOptimization(object):
         varpars: list of string
             List with the names of the varying parameters (autodetected when omited)
 
-        varpars: list of string
+        anapars: list of string
             List with the names of the analyzed quantities (autodetected when omited)
         """
         # path to history file
@@ -473,6 +473,47 @@ class PostProcOptimization(object):
         experiment = self.ax_client.experiment
         self.model = get_GPEI(experiment, experiment.fetch_data())
 
+    def evaluate_model(self, sample):
+
+        if self.model is None:
+            raise RuntimeError('Model not present. Run `build_model_ax` first.')
+
+        # Get optimum
+        best_arm, best_point_predictions = self.model.model_best_point()
+        best_pars = best_arm.parameters
+        parnames = list(best_pars.keys())
+
+        if isinstance(sample, np.ndarray):
+            # check the shape of the array
+            if sample.shape[1] != len(parnames):
+                raise RuntimeError('Second dimension of the sample array should match the number of parameters of the model')
+        elif isinstance(sample, pd.DataFrame):
+            # check if labels of the dataframe match parnames
+            for col in sample.columns:
+                if col not in parnames:
+                    raise RuntimeError('Column %s does not match any of the parameter names' % col)
+        else:
+            raise RuntimeError('Wrong data type')
+
+        obsf_list = []
+        obsf_0 = ObservationFeatures(parameters=best_pars)
+        for i in range(sample.shape[0]):
+            predf = deepcopy(obsf_0)
+            if isinstance(sample, np.ndarray):
+                for j, parname in enumerate(best_pars.keys()):
+                    predf.parameters[parname] = sample[i][j]
+            elif isinstance(sample, pd.DataFrame):
+                for col in sample.columns:
+                    predf.parameters[col] = sample[col].iloc[i]
+            obsf_list.append(predf)
+
+        mu, cov = self.model.predict(obsf_list)
+        metric_name = list(self.ax_client.experiment.metrics.keys())[0]
+        f_array = np.asarray(mu[metric_name])
+        sd_array = np.sqrt(cov[metric_name][metric_name])
+
+        return f_array, sd_array
+
     def plot_model(self, xname=None, yname=None, filename=None, npoints=200, stddev=False):
         """
         Plot model in the two selected variables, while others are fixed to the optimum.
@@ -515,6 +556,7 @@ class PostProcOptimization(object):
 
         print('Plotting the model in the %s vs %s plane' % (xname, yname))
 
+        # Get grid sample of points where to evalutate the model
         xaxis = np.linspace(experiment.parameters[xname].lower,
                             experiment.parameters[xname].upper, npoints)
         yaxis = np.linspace(experiment.parameters[yname].lower,
@@ -523,25 +565,9 @@ class PostProcOptimization(object):
         xarray = X.flatten()
         yarray = Y.flatten()
 
-        # Get optimum
-        best_arm, best_point_predictions = self.model.model_best_point()
-        best_pars = best_arm.parameters
-        print('Best point parameters: ', best_pars)
-        print('Best point prediction: ', best_point_predictions)
+        sample = pd.DataFrame({xname: xarray, yname: yarray})
+        f_plt, sd_plt = self.evaluate_model(sample)
         
-        obsf_list = []
-        obsf_0 = ObservationFeatures(parameters=best_pars)
-        for i in range(len(xarray)):
-            predf = deepcopy(obsf_0)
-            predf.parameters[xname] = xarray[i]
-            predf.parameters[yname] = yarray[i]
-            obsf_list.append(predf)
-
-        mu, cov = self.model.predict(obsf_list)
-        metric_name = list(self.ax_client.experiment.metrics.keys())[0]
-        f_plt = np.asarray(mu[metric_name])
-        sd_plt = np.sqrt(cov[metric_name][metric_name])
-
         # get numpy arrays with experiment parameters
         xtrials = np.zeros(experiment.num_trials)
         ytrials = np.zeros(experiment.num_trials)
@@ -559,6 +585,7 @@ class PostProcOptimization(object):
         # f_plots = [f_plt, sd_plt]
         # labels = ['value', 'std. deviation']
         f_plots = [f_plt]
+        metric_name = list(self.ax_client.experiment.metrics.keys())[0]
         labels = [metric_name]
         if stddev:
             f_plots.append(sd_plt)
