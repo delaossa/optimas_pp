@@ -149,7 +149,7 @@ class AxModelManager(object):
 
         return f_array, sd_array
 
-    def plot_model(self, xname=None, yname=None, filename=None, npoints=200, stddev=False):
+    def plot_model(self, xname=None, yname=None, p0=None, filename=None, npoints=200, stddev=False):
         """
         Plot model in the two selected variables, while others are fixed to the optimum.
 
@@ -160,6 +160,9 @@ class AxModelManager(object):
         
         yname: string
             Name of the variable to plot in y axis.
+
+        p0: dictionary
+            Particular values of parameters to be fixed for the evaluation over the sample.
 
         filename: string, optional
             When defined, it saves the figure to the specified file.
@@ -201,7 +204,7 @@ class AxModelManager(object):
         yarray = Y.flatten()
 
         sample = pd.DataFrame({xname: xarray, yname: yarray})
-        f_plt, sd_plt = self.evaluate_model(sample)
+        f_plt, sd_plt = self.evaluate_model(sample, p0=p0)
         
         # get numpy arrays with experiment parameters
         xtrials = np.zeros(experiment.num_trials)

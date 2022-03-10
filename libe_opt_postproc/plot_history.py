@@ -47,9 +47,12 @@ def main():
         df = ppo.get_df()
         index_list = list(df.sort_values(by=['f'],
                                 ascending=True).index)
-        print('Show top %i simulations' % args.top)
-        for i in range(args.top):
-            idx = index_list[i]
+
+        top = args.top
+        top_list = index_list[:top]
+        print('Show top %i simulations: ' % top, top_list)
+        for i, idx in reversed(list(enumerate(top_list))):
+            print('top %i:' % (i + 1))
             ppo.print_history_entry(idx)
 
         select = None
@@ -63,18 +66,18 @@ def main():
             
         if args.pars:
             parnames = args.pars
-            ppo.plot_history(parnames=parnames, sort=sort, select=select,
+            ppo.plot_history(parnames=parnames, sort=sort, select=select, top=top,
                              filename=opath + '/history_pars.png')
         else:
             if ppo.varpars:
                 parnames = ['f']
                 parnames.extend(ppo.varpars)
-                ppo.plot_history(parnames=parnames, sort=sort, select=select,
+                ppo.plot_history(parnames=parnames, sort=sort, select=select, top=top,
                                  filename=opath + '/history_varpars.png')
             if ppo.anapars:
                 parnames = ['f']
                 parnames.extend(ppo.anapars)
-                ppo.plot_history(parnames=parnames, sort=sort, select=select,
+                ppo.plot_history(parnames=parnames, sort=sort, select=select, top=top,
                                  filename=opath + '/history_anapars.png')
 
 

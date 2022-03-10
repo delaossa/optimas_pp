@@ -307,7 +307,7 @@ class PostProcOptimization(object):
                 print('deleting %s/%s .. ' % (simdir, ddir))
                 os.system('rm -rf %s/%s' % (simdir, ddir))
 
-    def plot_history(self, parnames=None, select=None, sort=None, filename=None):
+    def plot_history(self, parnames=None, xname=None, select=None, sort=None, top=None, filename=None):
         """
         Print selected parameters versus simulation index.
 
@@ -325,21 +325,36 @@ class PostProcOptimization(object):
             as values, a Bool indicating if ordering ascendingly (True) or descendingly otherwise.
             e.g. {'f': False} sort simulations according to `f` descendingly.
 
+        top: int, optional
+            Highight the top n simulations according to `f`.
+
         filename: string, optional
             When defined, it saves the figure to the specified file.
         """
 
         df = self.df.copy()
-        index = list(df.index)
+        xvalues = list(df.index)
+        if xname is not None:
+            xvalues = df[xname]
             
         # order list of simulations and re-index
         if sort is not None:
             df = df.sort_values(by=list(sort.keys()), ascending=tuple(sort.values())).reset_index(drop=True)
-            
+            xvalues = list(df.index)
+            if xname is not None:
+                xvalues = df[xname]
+
         if select is not None:
             df_select = self.get_df_with_select(select, df)
         else:
             df_select = None
+
+        if top is not None:
+            index_list = list(df.sort_values(by=['f'],
+                            ascending=True).index)
+            df_top = df.loc[index_list[:top]]
+        else:
+            df_top = None
 
         if parnames is None:
             parnames = ['f']
@@ -357,7 +372,7 @@ class PostProcOptimization(object):
         # fig_height = bottom + top + nplots * height + (nplots - 1) * yspacing
         nbins = 25
     
-        plt.figure()
+        plt.figure(dpi=100)
 
         ax_histy_list = []
         histy_list = []
@@ -370,15 +385,23 @@ class PostProcOptimization(object):
             h = df[parnames[i]]
             ax_scatter = plt.axes(rect_scatter)
             plt.grid(color='lightgray', linestyle='dotted')
-            plt.plot(index, h, 'o')
+            plt.plot(xvalues, h, 'o')
             if df_select is not None:
-                index_cut = list(df_select.index)
+                xvalues_cut = list(df_select.index)
+                if xname is not None:
+                    xvalues_cut = df_select[xname]
                 h_cut = df_select[parnames[i]]
-                plt.plot(index_cut, h_cut, 'o')
+                plt.plot(xvalues_cut, h_cut, 'o')
+            if df_top is not None:
+                xvalues_top = list(df_top.index)
+                if xname is not None:
+                    xvalues_top = df_top[xname]
+                h_top = df_top[parnames[i]]
+                plt.plot(xvalues_top, h_top, 'o')
 
             if (parnames[i] == 'f') and (not sort):
                 cummin = df.f.cummin().values
-                plt.plot(index, cummin, '-', c='black')
+                plt.plot(xvalues, cummin, '-', c='black')
             
             plt.title(parnames[i].replace('_', ' '), fontdict={'fontsize': 8}, loc='right', pad=2)
         
@@ -393,6 +416,10 @@ class PostProcOptimization(object):
                 h_cut = df_select[parnames[i]]
                 ax_histy.hist(h_cut, bins=bins,
                               weights=100. * np.ones(len(h_cut)) / len(h), orientation='horizontal')
+            if df_top is not None:
+                h_top = df_top[parnames[i]]
+                ax_histy.hist(h_top, bins=bins,
+                              weights=100. * np.ones(len(h_top)) / len(h), orientation='horizontal')
             ax_histy.set_ylim(ax_scatter.get_ylim())
 
             ax_histy_list.append(ax_histy)
@@ -408,6 +435,8 @@ class PostProcOptimization(object):
             else:
                 ax_histy.tick_params(direction='out', labelleft=False)
                 ax_scatter.set_xlabel('simulation number')
+                if xname is not None:
+                    ax_scatter.set_xlabel(xname.replace('_', ' '))
                 ax_histy.set_xlabel('events [%]')
             
             histmax = 1.1 * max([h.max() for h in histy_list])
