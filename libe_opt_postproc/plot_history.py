@@ -15,6 +15,8 @@ def parse_args():
                               'or a directory containing it)'))
     parser.add_argument('-pars', nargs='+', default=[],
                         help='list of parameters to show')
+    parser.add_argument('-xname', type=str, default=None,
+                        help='name of the x-axis parameter')
     parser.add_argument('-opath', type=str, dest='opath', default=None,
                         help='output folder')
     parser.add_argument('--sort', action='store_true', default=False,
@@ -63,21 +65,23 @@ def main():
             sort = {'f': False}
         else:
             sort = None
-            
+
+        xname = args.xname
+
         if args.pars:
             parnames = args.pars
-            ppo.plot_history(parnames=parnames, sort=sort, select=select, top=top,
+            ppo.plot_history(parnames=parnames, xname=xname, sort=sort, select=select, top=top,
                              filename=opath + '/history_pars.png')
         else:
             if ppo.varpars:
                 parnames = ['f']
                 parnames.extend(ppo.varpars)
-                ppo.plot_history(parnames=parnames, sort=sort, select=select, top=top,
+                ppo.plot_history(parnames=parnames, xname=xname, sort=sort, select=select, top=top,
                                  filename=opath + '/history_varpars.png')
             if ppo.anapars:
                 parnames = ['f']
                 parnames.extend(ppo.anapars)
-                ppo.plot_history(parnames=parnames, sort=sort, select=select, top=top,
+                ppo.plot_history(parnames=parnames, xname=xname, sort=sort, select=select, top=top,
                                  filename=opath + '/history_anapars.png')
 
 
