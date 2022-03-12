@@ -272,7 +272,7 @@ class PostProcOptimization(object):
         Print parameters for row entry with index `idx`
         """
 
-        h = self.df.iloc[idx]
+        h = self.df.loc[idx]
         print('Simulation %i:' % (h['sim_id']))
         print('Objective function:')
         print('%20s = %10.5f' % ('f', h['f']))
@@ -350,8 +350,7 @@ class PostProcOptimization(object):
             df_select = None
 
         if top is not None:
-            index_list = list(df.sort_values(by=['f'],
-                            ascending=True).index)
+            index_list = list(df.sort_values(by=['f'], ascending=True).index)
             df_top = df.loc[index_list[:top]]
         else:
             df_top = None
