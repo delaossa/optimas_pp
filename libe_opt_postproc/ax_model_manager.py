@@ -149,7 +149,7 @@ class AxModelManager(object):
 
         return f_array, sd_array
 
-    def plot_model(self, xname=None, yname=None, p0=None, filename=None, npoints=200, stddev=False):
+    def plot_model(self, xname=None, yname=None, p0=None, filename=None, npoints=200, stddev=False, **kw):
         """
         Plot model in the two selected variables, while others are fixed to the optimum.
 
@@ -169,6 +169,11 @@ class AxModelManager(object):
 
         npoints: int, optional
             Number of points in each axis
+
+        stddev: bool,
+            when true also the standard deviation is shown
+
+        kw: optional arguments to pass to `pcolormesh`.
         """
 
         if self.ax_client is None:
@@ -240,7 +245,7 @@ class AxModelManager(object):
             cmap = 'Spectral'
             if (i == 0) and (not minimize):
                 cmap = 'Spectral_r'
-            im = ax.pcolormesh(xaxis, yaxis, f.reshape(X.shape), cmap=cmap, shading='auto')
+            im = ax.pcolormesh(xaxis, yaxis, f.reshape(X.shape), cmap=cmap, shading='auto', **kw)
             cbar = fig.colorbar(im, ax=ax)
             cbar.set_label(labels[i])
             ax.set(xlabel=xname, ylabel=yname)
