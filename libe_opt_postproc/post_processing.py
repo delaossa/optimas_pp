@@ -57,6 +57,8 @@ class PostProcOptimization(object):
         else:
             raise RuntimeError('The path should either point to a folder or a `.npy` file.')
 
+        print('data file name: ', os.path.basename(self.hist_file))
+
         # Load the file as a pandas DataFrame
         x  = np.load(self.hist_file)
         d = {label: x[label].flatten() for label in x.dtype.names
