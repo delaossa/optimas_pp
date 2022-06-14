@@ -54,7 +54,8 @@ def main():
             sid_todelete.sort()
             print('keep top %i: ' % keep, sid_tokeep)
             print('delete the rest: ', sid_todelete)
-            ppo.delete_simulation_data(sid_todelete, edir='ensemble', ddir='diags')
+            # ppo.delete_simulation_data(sid_todelete, edir='ensemble', ddir='diags')
+            ppo.delete_simulation_data(sid_todelete)
 
 
 if __name__ == '__main__':

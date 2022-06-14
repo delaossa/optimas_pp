@@ -298,18 +298,26 @@ class PostProcOptimization(object):
                 return directory
         return None
 
-    def delete_simulation_data(self, sid_list, edir='ensemble', ddir='diags'):
+    def delete_simulation_data(self, sid_list,
+                               edirlist=['ensemble', 'ensemble_1'],
+                               ddirlist=['diags', 'lab_diags']):
         """
         Delete the data from simulations with sim_id in sid_list
         """
 
-        for sid in sid_list:
-            simdir = self.get_sim_dir_name(sid, edir=edir)
-            if simdir is not None:
-                datadir = simdir + '/' + ddir
-                if os.path.isdir(datadir):
-                    print('deleting %s .. ' % (datadir))
-                    os.system('rm -rf %s/%s' % (simdir, ddir))
+        for edir in edirlist:
+            ensemble_path = os.path.dirname(os.path.abspath(self.hist_file)) + '/' + edir
+            if not os.path.isdir(ensemble_path):
+                continue
+
+            for ddir in ddirlist:
+                for sid in sid_list:
+                    simdir = self.get_sim_dir_name(sid, edir=edir)
+                    if simdir is not None:
+                        datadir = simdir + '/' + ddir
+                        if os.path.isdir(datadir):
+                            print('deleting %s .. ' % (datadir))
+                            os.system('rm -rf %s/%s' % (simdir, ddir))
 
     def plot_history(self, parnames=None, xname=None, select=None, sort=None, top=None, filename=None):
         """
