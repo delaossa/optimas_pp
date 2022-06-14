@@ -306,8 +306,10 @@ class PostProcOptimization(object):
         for sid in sid_list:
             simdir = self.get_sim_dir_name(sid, edir=edir)
             if simdir is not None:
-                print('deleting %s/%s .. ' % (simdir, ddir))
-                os.system('rm -rf %s/%s' % (simdir, ddir))
+                datadir = simdir + '/' + ddir
+                if os.path.isdir(datadir):
+                    print('deleting %s .. ' % (datadir))
+                    os.system('rm -rf %s/%s' % (simdir, ddir))
 
     def plot_history(self, parnames=None, xname=None, select=None, sort=None, top=None, filename=None):
         """

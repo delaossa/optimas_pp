@@ -35,27 +35,27 @@ def main():
         print('History file: %s' % hist_file)
 
         df = ppo.get_df()
-        index_list = list(df.sort_values(by=['f'], ascending=True).index)
-        print('Show top %i simulations' % args.top)
-        for i in range(args.top):
-            idx = index_list[i]
+        # get list of indexes ordered by objective function value
+        index_list = list(df.sort_values(by=['f'],
+                                ascending=True).index)
+
+        top = args.top
+        top_list = index_list[:top]
+        print('Show top %i simulations: ' % top, top_list)
+        for i, idx in reversed(list(enumerate(top_list))):
+            print('top %i:' % (i + 1))
             ppo.print_history_entry(idx)
 
         if args.keep is not None:
-            itop = args.keep
-            sid_list = df.iloc[index_list]['sim_id'].tolist()
-            sid_tokeep = sid_list[:itop]
-            sid_todelete = sid_list[itop:]
-            print('keep top %i: ' % itop, sid_tokeep)
+            keep = args.keep
+            sid_list = df.loc[index_list]['sim_id'].tolist()
+            sid_tokeep = sid_list[:keep]
+            sid_todelete = sid_list[keep:]
+            sid_todelete.sort()
+            print('keep top %i: ' % keep, sid_tokeep)
             print('delete the rest: ', sid_todelete)
             ppo.delete_simulation_data(sid_todelete, edir='ensemble', ddir='diags')
-            """
-            for sid in sid_todelete:
-                simdir = ppo.get_sim_dir_name(sid, edir='ensemble')
-                if simdir is not None:
-                    print('deleting %s/diags .. ' % (simdir))
-                    # os.system('rm -rf %s/diags' % (simdir))
-            """
+
 
 if __name__ == '__main__':
     main()
