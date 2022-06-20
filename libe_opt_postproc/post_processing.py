@@ -66,14 +66,22 @@ class PostProcOptimization(object):
         self.df = pd.DataFrame(d)
 
         # Only keep the simulations that finished properly
-        self.df = self.df[self.df.returned]
+        try:
+            self.df = self.df[self.df.returned]
+        except AttributeError:
+            self.df = self.df[self.df.sim_ended]
 
         # Make the time relative to the start of the simulation
-        self.df['given_time'] -= self.df['gen_time'].min()
-        # patch for older versions of the libE_opt history file
-        if 'returned_time' in list(self.df.columns.values):
-            self.df['returned_time'] -= self.df['gen_time'].min()
-        self.df['gen_time'] -= self.df['gen_time'].min()
+        try:
+            self.df['given_time'] -= self.df['gen_time'].min()
+            # patch for older versions of the libE_opt history file
+            if 'returned_time' in list(self.df.columns.values):
+                self.df['returned_time'] -= self.df['gen_time'].min()
+            self.df['gen_time'] -= self.df['gen_time'].min()
+        except KeyError:
+            self.df['sim_started_time'] -= self.df['gen_ended_time'].min()
+            self.df['sim_ended_time'] -= self.df['gen_ended_time'].min()
+            self.df['gen_ended_time'] -= self.df['gen_ended_time'].min()
 
         # if None in [self.varpars, self.anapars]:
         if self.varpars is None:
