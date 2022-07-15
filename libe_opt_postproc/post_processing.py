@@ -138,7 +138,12 @@ class PostProcOptimization(object):
             fidelity = self.df[fidelity_parameter]
         else:
             fidelity = None
-        plt.scatter( self.df.returned_time, self.df.f, c=fidelity, **kw)
+
+        try:
+            plt.scatter( self.df.returned_time, self.df.f, c=fidelity, **kw)
+        except AttributeError:
+            plt.scatter( self.df.sim_ended_time, self.df.f, c=fidelity, **kw)
+
         plt.ylabel('f')
         plt.xlabel('Time ')
 
@@ -176,8 +181,13 @@ class PostProcOptimization(object):
         else:
             df = self.df.copy()
 
-        df = df.sort_values('returned_time')
-        t = np.concatenate( (np.zeros(1), df.returned_time.values))
+        try:
+            df = df.sort_values('returned_time')
+            t = np.concatenate( (np.zeros(1), df.returned_time.values))
+        except KeyError:
+            df = df.sort_values('sim_ended_time')
+            t = np.concatenate( (np.zeros(1), df.sim_ended_time.values))
+
         cummin = np.concatenate( (np.zeros(1), df.f.cummin().values))
 
         if t_array is not None:
@@ -216,8 +226,13 @@ class PostProcOptimization(object):
             max_fidelity = df[fidelity_parameter].max()
 
         for i in range(len(df)):
-            start = df['given_time'].iloc[i]
-            duration = df['returned_time'].iloc[i] - start
+            try:
+                start = df['given_time'].iloc[i]
+                duration = df['returned_time'].iloc[i] - start
+            except KeyError:
+                start = df['sim_started_time'].iloc[i]
+                duration = df['sim_ended_time'].iloc[i] - start
+
             if fidelity_parameter is not None:
                 fidelity = df[fidelity_parameter].iloc[i]
                 color = plt.cm.viridis( (fidelity - min_fidelity) / (max_fidelity - min_fidelity))
