@@ -1,2 +1,3 @@
 libE-opt
+matplotlib
 natsort
