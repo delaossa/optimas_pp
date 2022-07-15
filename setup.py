@@ -26,7 +26,7 @@ setup(name='libE_opt_postproc',
       install_requires=read_requirements(),
       scripts=['libe_opt_postproc/plot_history.py',
                'libe_opt_postproc/plot_model.py',
-               'libe_opt_postproc/show_ensemble.py'],
+               'libe_opt_postproc/show_sims.py'],
       platforms='any',
       classifiers=[
           "Development Status :: 3 - Alpha",
