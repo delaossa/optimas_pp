@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse, os
+from natsort import natsorted
 from libe_opt_postproc.post_processing import PostProcOptimization
 # --
 import matplotlib
@@ -24,7 +25,7 @@ def parse_args():
     parser.add_argument('-cut', type=float, dest='cut', default=None,
                         help='select entries with f below this cut')
     parser.add_argument('-top', type=int, dest='top', default=1,
-                        help='show top scoring simulation')
+                        help='show top scoring simulations')
 
     args = parser.parse_args()
     return args
@@ -34,15 +35,17 @@ def main():
     # parse command line
     args = parse_args()
 
-    for path in args.paths:
+    path_list = natsorted(args.paths)
+
+    for path in path_list:
         ppo = PostProcOptimization(path)
 
         hist_file = ppo.hist_file
         print('History file: %s' % hist_file)
+        base_dir = os.path.dirname(os.path.abspath(hist_file))
 
         # Set output path
         if args.opath is None:
-            base_dir = os.path.dirname(os.path.abspath(hist_file))
             opath = base_dir + '/plots'
         os.makedirs(opath, exist_ok=True)
 
@@ -54,7 +57,12 @@ def main():
         top_list = index_list[:top]
         print('Show top %i simulations: ' % top, top_list)
         for i, idx in reversed(list(enumerate(top_list))):
-            print('top %i:' % (i + 1))
+            sim_path = ppo.get_sim_path(idx)
+            if sim_path.startswith(base_dir):
+                sim_path = sim_path[len(base_dir) + 1:]
+            print('top %i -> %s' % (i + 1, sim_path))
+            # sim_name = os.path.basename(sim_path)
+            # print('top %i -> %s' % (i + 1, sim_name))
             ppo.print_history_entry(idx)
 
         select = None

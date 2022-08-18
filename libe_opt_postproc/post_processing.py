@@ -254,16 +254,18 @@ class PostProcOptimization(object):
         """
  
         from libensemble.tools import fields_keys as fkeys
+
         # all parameters present in history file
-        allpars = list(self.df.columns)
+        # allpars = list(self.df.columns)
         # print('all variables: ', allpars)
         # list of libE reserved names always listed in H
         libE_field_names = [f[0] for f in fkeys.libE_fields]
         libE_field_names.extend(['resource_sets', 'f'])
-        print('libE parameters:    ', libE_field_names)
+        # print('libE parameters:    ', libE_field_names)
+
         # list of specific parameter names (user defined)
-        spepars = [x for x in allpars if x not in libE_field_names]
-        print('specific parameters available: ', spepars)
+        # spepars = [x for x in allpars if x not in libE_field_names]
+        # print('specific parameters available: ', spepars)
 
         # setup searching directories
         base_dir = os.path.dirname(os.path.abspath(self.hist_file))
@@ -310,15 +312,21 @@ class PostProcOptimization(object):
             for name in self.anapars:
                 print('%20s = %10.5f' % (name, h[name]))
 
-    def get_sim_dir_name(self, sim_id, edir='ensemble'):
-        # get simulation directory
-        ensemble_path = os.path.dirname(os.path.abspath(self.hist_file)) + '/' + edir
-        simdirs = os.listdir(ensemble_path)
+    def get_sim_path(self, sim_id, edirlist=['ensemble', 'ensemble_1']):
         sim_name_id = 'sim%i_' % (sim_id)
-        for simdir in simdirs:
-            if sim_name_id in simdir:
-                directory = '%s/%s' % (ensemble_path, simdir)
-                return directory
+
+        # get simulation directory
+        for edir in edirlist:
+            ensemble_path = os.path.dirname(os.path.abspath(self.hist_file)) + '/' + edir
+            if not os.path.isdir(ensemble_path):
+                continue
+
+            simdirs = os.listdir(ensemble_path)
+            for simdir in simdirs:
+                if sim_name_id in simdir:
+                    directory = '%s/%s' % (ensemble_path, simdir)
+                    return directory
+
         return None
 
     def delete_simulation_data(self, sid_list,
@@ -328,19 +336,14 @@ class PostProcOptimization(object):
         Delete the data from simulations with sim_id in sid_list
         """
 
-        for edir in edirlist:
-            ensemble_path = os.path.dirname(os.path.abspath(self.hist_file)) + '/' + edir
-            if not os.path.isdir(ensemble_path):
-                continue
-
-            for ddir in ddirlist:
-                for sid in sid_list:
-                    simdir = self.get_sim_dir_name(sid, edir=edir)
-                    if simdir is not None:
-                        datadir = simdir + '/' + ddir
-                        if os.path.isdir(datadir):
-                            print('deleting %s .. ' % (datadir))
-                            os.system('rm -rf %s/%s' % (simdir, ddir))
+        for ddir in ddirlist:
+            for sid in sid_list:
+                simdir = self.get_sim_path(sid, edirlist=edirlist)
+                if simdir is not None:
+                    datadir = simdir + '/' + ddir
+                    if os.path.isdir(datadir):
+                        print('deleting %s .. ' % (datadir))
+                        os.system('rm -rf %s/%s' % (simdir, ddir))
 
     def plot_history(self, parnames=None, xname=None, select=None, sort=None, top=None, filename=None):
         """
