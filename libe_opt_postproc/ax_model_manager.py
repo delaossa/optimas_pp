@@ -157,7 +157,7 @@ class AxModelManager(object):
         ----------
         xname: string
             Name of the variable to plot in x axis.
-        
+        z
         yname: string
             Name of the variable to plot in y axis.
 
@@ -242,10 +242,13 @@ class AxModelManager(object):
                 ax = axs
             else:
                 ax = axs[i]
+            """
             cmap = 'Spectral'
             if (i == 0) and (not minimize):
                 cmap = 'Spectral_r'
             im = ax.pcolormesh(xaxis, yaxis, f.reshape(X.shape), cmap=cmap, shading='auto', **kw)
+            """
+            im = ax.pcolormesh(xaxis, yaxis, f.reshape(X.shape), shading='auto', **kw)
             cbar = fig.colorbar(im, ax=ax)
             cbar.set_label(labels[i])
             ax.set(xlabel=xname, ylabel=yname)
