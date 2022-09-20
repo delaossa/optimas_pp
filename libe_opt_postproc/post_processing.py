@@ -466,11 +466,11 @@ class PostProcOptimization(object):
             # ax_scatter.set_ylabel('par$_{%i}$' % i)
             if i != nplots - 1:
                 ax_scatter.tick_params(labelbottom=False)
-                ax_histy.tick_params(direction='out', labelbottom=False, labelleft=False)
+                ax_histy.tick_params(labelbottom=False, labelleft=False)
                 if i == 0:
                     ax_scatter.set_ylabel('')
             else:
-                ax_histy.tick_params(direction='out', labelleft=False)
+                ax_histy.tick_params(labelleft=False)
                 ax_scatter.set_xlabel('simulation number')
                 if xname is not None:
                     ax_scatter.set_xlabel(xname.replace('_', ' '))

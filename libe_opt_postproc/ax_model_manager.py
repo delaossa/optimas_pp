@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from copy import deepcopy
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
 # Ax utilities for model building
 from ax.service.ax_client import AxClient
 from ax.modelbridge.generation_strategy import (
@@ -149,7 +150,7 @@ class AxModelManager(object):
 
         return f_array, sd_array
 
-    def plot_model(self, xname=None, yname=None, p0=None, filename=None, npoints=200, stddev=False, **kw):
+    def plot_model(self, xname=None, yname=None, p0=None, filename=None, npoints=200, stddev=False, clabel=False, **kw):
         """
         Plot model in the two selected variables, while others are fixed to the optimum.
 
@@ -173,6 +174,9 @@ class AxModelManager(object):
         stddev: bool,
             when true also the standard deviation is shown
 
+        clabel: bool,
+            when true labels are shown along the contour lines
+
         kw: optional arguments to pass to `pcolormesh`.
         """
 
@@ -185,7 +189,7 @@ class AxModelManager(object):
         # get experiment info
         experiment = self.ax_client.experiment
         parnames = list(experiment.parameters.keys())
-        minimize = experiment.optimization_config.objective.minimize
+        # minimize = experiment.optimization_config.objective.minimize
 
         if len(parnames) < 2:
             raise RuntimeError('Insufficient number of parameters in data for this plot. Minimum 2.')
@@ -235,27 +239,18 @@ class AxModelManager(object):
             labels.append('std. deviation')
 
         nplots = len(f_plots)
-        fig, axs = plt.subplots(nplots, figsize=(6.4, nplots * 4.8), dpi=100)
-        fig.suptitle('Model for metric %s' % metric_name)
+        gs = gridspec.GridSpec(1, nplots)
         for i, f in enumerate(f_plots):
-            if nplots == 1:
-                ax = axs
-            else:
-                ax = axs[i]
-            """
-            cmap = 'Spectral'
-            if (i == 0) and (not minimize):
-                cmap = 'Spectral_r'
-            im = ax.pcolormesh(xaxis, yaxis, f.reshape(X.shape), cmap=cmap, shading='auto', **kw)
-            """
+            ax = plt.subplot(gs[i])
             im = ax.pcolormesh(xaxis, yaxis, f.reshape(X.shape), shading='auto', **kw)
-            cbar = fig.colorbar(im, ax=ax)
+            cbar = plt.colorbar(im, ax=ax)
             cbar.set_label(labels[i])
             ax.set(xlabel=xname, ylabel=yname)
             # adding contour lines with labels
-            ax.contour(X, Y, f.reshape(X.shape), levels=20,
+            cset = ax.contour(X, Y, f.reshape(X.shape), levels=20,
                        linewidths=0.5, colors='black', linestyles='solid')
-            # plt.clabel(cset, inline=True, fmt='%1.1f', fontsize=6)
+            if clabel:
+                plt.clabel(cset, inline=True, fmt='%1.1f', fontsize=6)
             ax.scatter(xtrials, ytrials, s=2, c='black', marker='o')
         plt.tight_layout()
 
