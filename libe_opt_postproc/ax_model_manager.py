@@ -87,15 +87,15 @@ class AxModelManager(object):
         experiment = self.ax_client.experiment
         self.model = get_GPEI(experiment, experiment.fetch_data())
 
-    def evaluate_model(self, sample, p0=None):
+    def evaluate_model(self, sample=None, p0=None):
         """
         Evaluate the model over the specified sample
 
         Parameter:
         ----------
-        sample: Pandas DataFrame or numpy array
+        sample: Pandas DataFrame, dict of arrays or numpy array
             If numpy array, it must contain the values of all the model parameres.
-            If DataFrame, it can contain only those parameter to vary.
+            If DataFrame or dict, it can contain only those parameters to vary.
             The rest of parameters would be set to the model best point,
             unless they are further specified using `p0`.
 
@@ -124,23 +124,40 @@ class AxModelManager(object):
             if sample.shape[1] != len(parnames):
                 raise RuntimeError('Second dimension of the sample array should match the number of parameters of the model')
         elif isinstance(sample, pd.DataFrame):
-            # check if labels of the dataframe match parnames
+            # check if labels of the dataframe match the parnames
             for col in sample.columns:
                 if col not in parnames:
                     raise RuntimeError('Column %s does not match any of the parameter names' % col)
-        else:
+        elif isinstance(sample, dict):
+            # check if the keys of the dictionary match the parnames
+            for key in sample.keys():
+                if key not in parnames:
+                    raise RuntimeError('Key %s does not match any of the parameter names' % col)
+        elif sample is not None:
             raise RuntimeError('Wrong data type')
 
         obsf_list = []
         obsf_0 = ObservationFeatures(parameters=parameters)
-        for i in range(sample.shape[0]):
-            predf = deepcopy(obsf_0)
-            if isinstance(sample, np.ndarray):
+        if isinstance(sample, np.ndarray):
+            for i in range(sample.shape[0]):
+                predf = deepcopy(obsf_0)
                 for j, parname in enumerate(parameters.keys()):
                     predf.parameters[parname] = sample[i][j]
-            elif isinstance(sample, pd.DataFrame):
+                obsf_list.append(predf)
+        elif isinstance(sample, pd.DataFrame):
+            for i in range(sample.shape[0]):
+                predf = deepcopy(obsf_0)
                 for col in sample.columns:
                     predf.parameters[col] = sample[col].iloc[i]
+                obsf_list.append(predf)
+        elif isinstance(sample, dict):
+            for i in range(sample[list(sample.keys())[0]].shape[0]):
+                predf = deepcopy(obsf_0)
+                for key in sample.keys():
+                    predf.parameters[key] = sample[key][i]
+                obsf_list.append(predf)
+        elif sample is None:
+            predf = deepcopy(obsf_0)
             obsf_list.append(predf)
 
         mu, cov = self.model.predict(obsf_list)
@@ -257,3 +274,11 @@ class AxModelManager(object):
         if filename is not None:
             plt.savefig(filename, dpi=300)
             print('Saving figure to', filename)
+
+    def get_arm_index(self, arm_name=None):
+        if arm_name is None:
+            best_arm, best_point_predictions = self.model.model_best_point()
+            arm_name = best_arm.name
+
+        df = self.ax_client.experiment.fetch_data().df
+        return df.loc[df['arm_name'] == arm_name]['trial_index']
