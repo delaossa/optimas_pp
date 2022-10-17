@@ -312,7 +312,7 @@ class PostProcOptimization(object):
             for name in self.anapars:
                 print('%20s = %10.5f' % (name, h[name]))
 
-    def get_sim_path(self, sim_id, edirlist=['ensemble', 'ensemble_1']):
+    def get_sim_path(self, sim_id, edirlist=['ensemble', 'ensemble_1', 'ensemble_2']):
         sim_name_id = 'sim%i_' % (sim_id)
 
         # get simulation directory
