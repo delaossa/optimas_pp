@@ -167,7 +167,9 @@ class AxModelManager(object):
 
         return f_array, sd_array
 
-    def plot_model(self, xname=None, yname=None, p0=None, filename=None, npoints=200, stddev=False, clabel=False, **kw):
+    def plot_model(self, xname=None, yname=None, p0=None, filename=None, npoints=200,
+                   xrange=None, yrange=None, wspace=0.25,
+                   stddev=False, clabel=False, subgridspec=None, **kw):
         """
         Plot model in the two selected variables, while others are fixed to the optimum.
 
@@ -221,10 +223,25 @@ class AxModelManager(object):
         print('Plotting the model in the %s vs %s plane' % (xname, yname))
 
         # Get grid sample of points where to evalutate the model
-        xaxis = np.linspace(experiment.parameters[xname].lower,
-                            experiment.parameters[xname].upper, npoints)
-        yaxis = np.linspace(experiment.parameters[yname].lower,
-                            experiment.parameters[yname].upper, npoints)
+        if xrange is None:
+            xrange = [None, None]
+        if yrange is None:
+            yrange = [None, None]
+
+        if xrange[0] is None:
+            xrange[0] = experiment.parameters[xname].lower
+
+        if xrange[1] is None:
+            xrange[1] = experiment.parameters[xname].upper
+
+        if yrange[0] is None:
+            yrange[0] = experiment.parameters[yname].lower
+
+        if yrange[1] is None:
+            yrange[1] = experiment.parameters[yname].upper
+
+        xaxis = np.linspace(xrange[0], xrange[1], npoints)
+        yaxis = np.linspace(yrange[0], yrange[1], npoints)
         X, Y = np.meshgrid(xaxis, yaxis)
         xarray = X.flatten()
         yarray = Y.flatten()
@@ -256,7 +273,11 @@ class AxModelManager(object):
             labels.append('std. deviation')
 
         nplots = len(f_plots)
-        gs = gridspec.GridSpec(1, nplots)
+        if subgridspec is None:
+            gs = gridspec.GridSpec(1, nplots, wspace=wspace)
+        else:
+            gs = gridspec.GridSpecFromSubplotSpec(1, nplots, subgridspec, wspace=wspace)
+
         for i, f in enumerate(f_plots):
             ax = plt.subplot(gs[i])
             im = ax.pcolormesh(xaxis, yaxis, f.reshape(X.shape), shading='auto', **kw)
@@ -269,7 +290,9 @@ class AxModelManager(object):
             if clabel:
                 plt.clabel(cset, inline=True, fmt='%1.1f', fontsize=6)
             ax.scatter(xtrials, ytrials, s=2, c='black', marker='o')
-        plt.tight_layout()
+            ax.set_xlim(xrange)
+            ax.set_ylim(yrange)
+        # plt.tight_layout()
 
         if filename is not None:
             plt.savefig(filename, dpi=300)
