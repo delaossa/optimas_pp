@@ -467,21 +467,23 @@ class PostProcOptimization(object):
             if i != nplots - 1:
                 ax_scatter.tick_params(labelbottom=False)
                 ax_histy.tick_params(labelbottom=False, labelleft=False)
-                if i == 0:
-                    ax_scatter.set_ylabel('')
+                ax_histy.set_xticks([])
+                # if i == 0:
+                #    ax_scatter.set_ylabel('')
             else:
-                ax_histy.tick_params(labelleft=False)
-                ax_scatter.set_xlabel('simulation number')
+                # ax_histy.set_xlabel('$\\mathrm{events~(\\%)}$')
+                ax_histy.tick_params(labelbottom=False, labelleft=False)
+                ax_histy.set_xticks([])
+                ax_scatter.set_xlabel('$\\mathrm{simulation~number}$')
                 if xname is not None:
                     ax_scatter.set_xlabel(xname.replace('_', ' '))
-                ax_histy.set_xlabel('events [%]')
             
             histmax = 1.1 * max([h.max() for h in histy_list])
             for i, ax_h in enumerate(ax_histy_list):
                 ax_h.set_xlim(-1, histmax)
 
         if filename is not None:
-            plt.savefig(filename, dpi=300)
+            plt.savefig(filename, dpi=300, bbox_inches='tight')
             print('Saving figure to', filename)
 
     def build_model(self, parnames=[], objname='f', minimize=True):
