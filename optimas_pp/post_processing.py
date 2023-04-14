@@ -253,45 +253,46 @@ class PostProcOptimization(object):
         in its corresponding optimization folder
         """
  
-        from libensemble.tools import fields_keys as fkeys
-
+        # from libensemble.tools import fields_keys as fkeys
         # all parameters present in history file
         # allpars = list(self.df.columns)
         # print('all variables: ', allpars)
         # list of libE reserved names always listed in H
-        libE_field_names = [f[0] for f in fkeys.libE_fields]
-        libE_field_names.extend(['resource_sets', 'f'])
+        # libE_field_names = [f[0] for f in fkeys.libE_fields]
+        # libE_field_names.extend(['resource_sets', 'f'])
         # print('libE parameters:    ', libE_field_names)
-
         # list of specific parameter names (user defined)
         # spepars = [x for x in allpars if x not in libE_field_names]
         # print('specific parameters available: ', spepars)
 
         # setup searching directories
         base_dir = os.path.dirname(os.path.abspath(self.hist_file))
-        search_dirs = [base_dir, base_dir + '/sim_specific']
+        search_dirs = [base_dir, os.path.join(base_dir, 'sim_specific')]
         for dire in search_dirs:
-            varparfile = dire + '/varying_parameters.py'
-            anaparfile = dire + '/analysis_script.py'
-            if os.path.isfile(varparfile):
-                basedir = os.path.dirname(varparfile)
-                sys.path.insert(1, basedir)
-                from varying_parameters import varying_parameters
-                self.varpars = list(varying_parameters.keys())
-                if os.path.isfile(anaparfile):
-                    from analysis_script import analyzed_quantities
-                    self.anapars = [x[0] for x in analyzed_quantities]
+            optimas_files = [os.path.join(dire, 'run_example.py'),
+                             os.path.join(dire, 'run_optimas.py')]
+            for f in optimas_files:
+                if os.path.isfile(f):
+                    basedir = os.path.dirname(f)
+                    sys.path.insert(1, basedir)
+                    fname = os.path.splitext(os.path.basename(f))[0]
+                    optrun = __import__(fname)
+                    varpars = optrun.gen.varying_parameters
+                    self.varpars = [vp.name for vp in varpars]
+                    anapars = optrun.gen.analyzed_parameters
+                    self.anapars = [ap.name for ap in anapars]
+                    break
 
         if self.varpars is not None:
             print('Varying parameters: ', self.varpars)
         else:
-            txt = ('varying_parameters.py not found.')
+            txt = ('Optimas runner file  not found.')
             warnings.warn(txt)
 
         if self.anapars is not None:
             print('Analyzed quantities:', self.anapars)
         else:
-            txt = ('analysis_script.py not found.')
+            txt = ('Optimas runner file  not found.')
             warnings.warn(txt)
 
     def print_history_entry(self, idx):
