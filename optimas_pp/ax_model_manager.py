@@ -70,7 +70,7 @@ class AxModelManager(object):
         gs = GenerationStrategy([GenerationStep(model=Models.GPEI, num_trials=-1)])
         self.ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
         self.ax_client.create_experiment(
-            name='libe_opt_data',
+            name='optimas_data',
             parameters=parameters,
             objective_name=objname,
             minimize=minimize,

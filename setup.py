@@ -13,20 +13,20 @@ def read_requirements():
 
 
 # Main setup command
-setup(name='libE_opt_postproc',
+setup(name='optimas_pp',
       version=__version__,
       author='',
       author_email='',
-      description='Post processing scripts for libE_opt',
+      description='Post processing scripts for Optimas',
       long_description=long_description,
       long_description_content_type="text/markdown",
-      url='https://github.com/delaossa/libE_opt_postproc',
+      url='https://github.com/delaossa/optimas_pp.git',
       license='',
       packages=find_packages('.'),
       install_requires=read_requirements(),
-      scripts=['libe_opt_postproc/plot_history.py',
-               'libe_opt_postproc/plot_model.py',
-               'libe_opt_postproc/show_sims.py'],
+      scripts=['optimas_pp/plot_history.py',
+               'optimas_pp/plot_model.py',
+               'optimas_pp/show_sims.py'],
       platforms='any',
       classifiers=[
           "Development Status :: 3 - Alpha",

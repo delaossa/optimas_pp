@@ -1,5 +1,5 @@
 """
-This file contains a class that helps post-process libE optimization
+This file contains a class that helps post-process Optimas' runs
 """
 import numpy as np
 import pandas as pd
@@ -19,7 +19,7 @@ class PostProcOptimization(object):
         Parameter:
         ----------
         path: string
-            Path to the folder that contains the libE optimization,
+            Path to the folder that contains the Optimas optimization,
             or path to the individual `.npy` history file.
         
         varpars: list of string

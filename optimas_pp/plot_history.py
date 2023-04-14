@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import argparse, os
 from natsort import natsorted
-from libe_opt_postproc.post_processing import PostProcOptimization
+from optimas_pp.post_processing import PostProcOptimization
 # --
 import matplotlib
 matplotlib.use('Agg')
@@ -12,7 +12,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('paths', nargs='+', default=[],
                         help=('list of paths to analyze '
-                              '(either a libE_opt histoty file '
+                              '(either a Optimas history file '
                               'or a directory containing it)'))
     parser.add_argument('-pars', nargs='+', default=[],
                         help='list of parameters to show')
