@@ -85,8 +85,23 @@ class PostProcOptimization(object):
 
         # if None in [self.varpars, self.anapars]:
         if self.varpars is None:
+            self._auto_detect_parameters_old()
+
+        if self.varpars is None:
             self._auto_detect_parameters()
 
+        if self.varpars is not None:
+            print('Varying parameters: ', self.varpars)
+        else:
+            txt = ('Optimas runner file  not found.')
+            warnings.warn(txt)
+
+        if self.anapars is not None:
+            print('Analyzed quantities:', self.anapars)
+        else:
+            txt = ('Optimas runner file  not found.')
+            warnings.warn(txt)
+            
     def get_df(self, select=None):
         """
         Return a pandas DataFrame containing the data from the simulation
@@ -245,6 +260,28 @@ class PostProcOptimization(object):
         plt.ylabel('Worker')
         plt.xlabel('Time ')
 
+    def _auto_detect_parameters_old(self):
+        """
+        Search optimization folder to find out the list of specific parameters
+
+        Note: it is assumed that the current history file is located
+        in its corresponding optimization folder
+        """
+        # setup searching directories
+        base_dir = os.path.dirname(os.path.abspath(self.hist_file))
+        search_dirs = [base_dir, os.path.join(base_dir, 'sim_specific')]
+        for dire in search_dirs:
+            varparfile = os.path.join(dire, 'varying_parameters.py')
+            anaparfile = os.path.join(dire, 'analysis_script.py')
+            if os.path.isfile(varparfile):
+                basedir = os.path.dirname(varparfile)
+                sys.path.insert(1, basedir)
+                from varying_parameters import varying_parameters
+                self.varpars = list(varying_parameters.keys())
+                if os.path.isfile(anaparfile):
+                    from analysis_script import analyzed_quantities
+                    self.anapars = [x[0] for x in analyzed_quantities]
+
     def _auto_detect_parameters(self):
         """
         Search optimization folder to find out the list of specific parameters
@@ -282,18 +319,6 @@ class PostProcOptimization(object):
                     anapars = optrun.gen.analyzed_parameters
                     self.anapars = [ap.name for ap in anapars]
                     break
-
-        if self.varpars is not None:
-            print('Varying parameters: ', self.varpars)
-        else:
-            txt = ('Optimas runner file  not found.')
-            warnings.warn(txt)
-
-        if self.anapars is not None:
-            print('Analyzed quantities:', self.anapars)
-        else:
-            txt = ('Optimas runner file  not found.')
-            warnings.warn(txt)
 
     def print_history_entry(self, idx):
         """

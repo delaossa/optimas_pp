@@ -4,7 +4,7 @@ A collection of scripts to analyze optimizations performed with [Optimas](https:
 
 ## Installing
 
-Install libE_opt according to https://github.com/optimas-org/optimas
+First install Optimas according to https://github.com/optimas-org/optimas
 
 Then install this package:
 
