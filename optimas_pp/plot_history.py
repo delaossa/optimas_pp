@@ -43,10 +43,13 @@ def main():
         hist_file = ppo.hist_file
         print('History file: %s' % hist_file)
         base_dir = os.path.dirname(os.path.abspath(hist_file))
+        dirlist = os.listdir(base_dir)
+        if 'evaluations' in dirlist:
+            base_dir, _ = os.path.split(base_dir)
 
         # Set output path
         if args.opath is None:
-            opath = base_dir + '/plots'
+            opath = os.path.join(base_dir, 'plots')
         os.makedirs(opath, exist_ok=True)
 
         df = ppo.get_df()

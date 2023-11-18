@@ -41,7 +41,7 @@ class PostProcOptimization(object):
         # Find the `npy` file that contains the results
         if os.path.isdir(path):
             # Get history file (if any)
-            hist_list = natsorted(glob.glob('%s/libE_history_*.npy' % path))
+            hist_list = natsorted(glob.glob('%s/*_history_*.npy' % path))
             if len(hist_list) == 0:
                 raise RuntimeError('The specified path does not contain any `.npy` file.')
             else:
@@ -304,7 +304,9 @@ class PostProcOptimization(object):
 
         # setup searching directories
         base_dir = os.path.dirname(os.path.abspath(self.hist_file))
-        search_dirs = [base_dir, os.path.join(base_dir, 'sim_specific')]
+        head_dir, _ = os.path.split(base_dir)
+        search_dirs = [base_dir, os.path.join(base_dir, 'sim_specific'),
+                       head_dir, os.path.join(head_dir, 'sim_specific')]
         for dire in search_dirs:
             optimas_files = [os.path.join(dire, 'run_example.py'),
                              os.path.join(dire, 'run_optimas.py')]
@@ -340,16 +342,25 @@ class PostProcOptimization(object):
 
     def get_sim_path(self, sim_id, edirlist=['ensemble', 'ensemble_1', 'ensemble_2']):
         sim_name_id = 'sim%i_' % (sim_id)
+        sim_name_id_new = 'sim%s' % (str(sim_id).zfill(4))
+
+        base_dir = os.path.dirname(os.path.abspath(self.hist_file))
+        head_dir, _ = os.path.split(base_dir)
 
         # get simulation directory
         for edir in edirlist:
-            ensemble_path = os.path.dirname(os.path.abspath(self.hist_file)) + '/' + edir
+            ensemble_path = os.path.join(base_dir, edir)
             if not os.path.isdir(ensemble_path):
-                continue
+                ensemble_path = os.path.join(head_dir, edir, 'evaluations')  # <- new optimas structure
+                if not os.path.isdir(ensemble_path):
+                    continue
 
             simdirs = os.listdir(ensemble_path)
             for simdir in simdirs:
                 if sim_name_id in simdir:
+                    directory = '%s/%s' % (ensemble_path, simdir)
+                    return directory
+                elif sim_name_id_new in simdir:
                     directory = '%s/%s' % (ensemble_path, simdir)
                     return directory
 
