@@ -295,7 +295,7 @@ class AxModelManager(object):
         # plt.tight_layout()
 
         if filename is not None:
-            plt.savefig(filename, dpi=300)
+            plt.savefig(filename, dpi=300, bbox_inches='tight')
             print('Saving figure to', filename)
 
     def get_arm_index(self, arm_name=None):

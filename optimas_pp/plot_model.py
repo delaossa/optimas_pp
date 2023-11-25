@@ -2,6 +2,7 @@
 import argparse, os
 from natsort import natsorted
 from optimas_pp.post_processing import PostProcOptimization
+import matplotlib.pyplot as plt
 
 
 def parse_args():
@@ -55,7 +56,8 @@ def main():
         objname = args.obj
         minimize = not args.max
         # build model and return the AxModelManager object
-        amm = ppo.build_model(parnames=parnames, objname=objname, minimize=minimize)
+        amm = ppo.build_model(parnames=parnames, objname=objname,
+                              minimize=minimize)
 
         fname = 'model_%s' % objname
         xname = args.xname
@@ -64,9 +66,14 @@ def main():
             fname += '_vs_%s_%s.png' % (xname, yname)
         else:
             fname += '.png'
-        
+
+        figsize = (6, 5)
+        if args.stddev:
+            figsize = (10,5)
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
+        figname = os.path.join(opath, '%s' % fname)
         amm.plot_model(xname=args.xname, yname=args.yname,
-                       filename=os.path.join(opath, '/%s' % fname),
+                       filename=figname, cmap='Spectral',
                        stddev=args.stddev)
 
 

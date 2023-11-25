@@ -83,20 +83,20 @@ def main():
             parnames = args.pars
             ppo.plot_history(parnames=parnames, xname=xname,
                              sort=sort, select=select, top=top,
-                             filename=opath + '/history_pars.png')
+                             filename=os.path.join(opath, 'history_pars.png'))
         else:
             if ppo.varpars:
                 parnames = ['f']
                 parnames.extend(ppo.varpars)
                 ppo.plot_history(parnames=parnames, xname=xname,
                                  sort=sort, select=select, top=top,
-                                 filename=opath + '/history_varpars.png')
+                                 filename=os.path.join(opath, 'history_varpars.png'))
             if ppo.anapars:
                 parnames = ['f']
                 parnames.extend(ppo.anapars)
                 ppo.plot_history(parnames=parnames, xname=xname,
                                  sort=sort, select=select, top=top,
-                                 filename=opath + '/history_anapars.png')
+                                 filename=os.path.join(opath, 'history_anapars.png'))
 
 
 if __name__ == '__main__':
